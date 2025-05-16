@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blocks Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Blocks Dashboard</h1>
+            <div class="search-container">
+                <input type="text" id="searchInput" placeholder="Search blocks...">
+                <i class="fas fa-search search-icon"></i>
+            </div>
+        </header>
+
+        <main>
+            <div class="filters">
+                <button class="filter-btn active" data-filter="all">All Blocks</button>
+                <button class="filter-btn" data-filter="recent">Recent</button>
+                <button class="filter-btn" data-filter="favorite">Favorites</button>
+            </div>
+
+            <div class="blocks-container" id="blocksContainer">
+                <!-- Blocks will be dynamically added here -->
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Sample data - in a real application, this would come from your backend
+        const blocks = [
+            { name: "react.html", description: "React component block", lastModified: "2025-05-15", isFavorite: true },
+            { name: "vue.html", description: "Vue component block", lastModified: "2025-05-14", isFavorite: false },
+            { name: "angular.html", description: "Angular component block", lastModified: "2025-05-10", isFavorite: true },
+            { name: "svelte.html", description: "Svelte component block", lastModified: "2025-05-05", isFavorite: false },
+            { name: "vanilla.html", description: "Vanilla JS block", lastModified: "2025-04-30", isFavorite: false }
+        ];
+
+        // Function to render blocks
+        function renderBlocks(blocksToRender) {
+            const blocksContainer = document.getElementById('blocksContainer');
+            blocksContainer.innerHTML = '';
+
+            blocksToRender.forEach(block => {
+                const blockCard = document.createElement('div');
+                blockCard.className = 'block-card';
+                blockCard.innerHTML = `
+                    <div class="block-header">
+                        <h3>${block.name}</h3>
+                        <button class="favorite-btn ${block.isFavorite ? 'active' : ''}">
+                            <i class="fas fa-star"></i>
+                        </button>
+                    </div>
+                    <p>${block.description}</p>
+                    <div class="block-footer">
+                        <span class="date">Modified: ${block.lastModified}</span>
+                        <div class="actions">
+                            <button class="action-btn edit"><i class="fas fa-edit"></i></button>
+                            <button class="action-btn view"><i class="fas fa-eye"></i></button>
+                        </div>
+                    </div>
+                `;
+                blocksContainer.appendChild(blockCard);
+
+                // Add event listener for favorite button
+                const favoriteBtn = blockCard.querySelector('.favorite-btn');
+                favoriteBtn.addEventListener('click', () => {
+                    favoriteBtn.classList.toggle('active');
+                    block.isFavorite = !block.isFavorite;
+                });
+
+                // Add event listeners for action buttons
+                const editBtn = blockCard.querySelector('.edit');
+                editBtn.addEventListener('click', () => {
+                    window.location.href = block.name;
+                });
+
+                const viewBtn = blockCard.querySelector('.view');
+                viewBtn.addEventListener('click', () => {
+                    window.open(block.name, '_blank');
+                });
+            });
+        }
+
+        // Initialize with all blocks
+        renderBlocks(blocks);
+
+        // Search functionality
+        const searchInput = document.getElementById('searchInput');
+        searchInput.addEventListener('input', () => {
+            const searchTerm = searchInput.value.toLowerCase();
+            const filteredBlocks = blocks.filter(block => 
+                block.name.toLowerCase().includes(searchTerm) || 
+                block.description.toLowerCase().includes(searchTerm)
+            );
+            renderBlocks(filteredBlocks);
+        });
+
+        // Filter buttons functionality
+        const filterBtns = document.querySelectorAll('.filter-btn');
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Remove active class from all buttons
+                filterBtns.forEach(b => b.classList.remove('active'));
+                // Add active class to clicked button
+                btn.classList.add('active');
+
+                const filter = btn.getAttribute('data-filter');
+                let filteredBlocks;
+
+                switch(filter) {
+                    case 'recent':
+                        // Sort by last modified date (newest first)
+                        filteredBlocks = [...blocks].sort((a, b) => 
+                            new Date(b.lastModified) - new Date(a.lastModified)
+                        );
+                        break;
+                    case 'favorite':
+                        filteredBlocks = blocks.filter(block => block.isFavorite);
+                        break;
+                    default:
+                        filteredBlocks = blocks;
+                }
+
+                renderBlocks(filteredBlocks);
+            });
+        });
+
+        // Function to check for new blocks in the directory
+        function checkForNewBlocks() {
+            // In a real application, this would be an AJAX call to your server
+            // For this example, we'll simulate finding a new block
+            setTimeout(() => {
+                const newBlock = { 
+                    name: "preact.html", 
+                    description: "Preact component block", 
+                    lastModified: "2025-05-16", 
+                    isFavorite: false 
+                };
+                
+                if (!blocks.some(block => block.name === newBlock.name)) {
+                    blocks.push(newBlock);
+                    // Re-render blocks if "All" or "Recent" filter is active
+                    const activeFilter = document.querySelector('.filter-btn.active').getAttribute('data-filter');
+                    if (activeFilter === 'all' || activeFilter === 'recent') {
+                        renderBlocks(blocks);
+                    }
+                }
+            }, 5000); // Check every 5 seconds (for demo purposes)
+        }
+
+        // Start checking for new blocks
+        checkForNewBlocks();
+
+        // Watch for changes in the directory
+        function setupDirectoryWatcher() {
+            // This is just a placeholder - in a real app you'd use server-side events or polling
+            console.log("Directory watcher initialized");
+        }
+
+        // Setup the directory watcher when the page loads
+        window.addEventListener('load', setupDirectoryWatcher);
+    </script>
+</body>
+</html>
